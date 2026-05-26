@@ -1,6 +1,5 @@
 import React from "react";
 import { MDBContainer } from "mdbreact";
-import { Chart } from 'chart.js/auto';
 import { Line } from "react-chartjs-2";
 import './App.css';
 

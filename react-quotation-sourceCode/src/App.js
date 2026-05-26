@@ -1,8 +1,8 @@
-import { useState, useRef } from "react";
+import { useRef, useState } from "react";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import QuotationTable from "./QuotationTable";
 
-import { Container, Form, Col, Row, Button } from 'react-bootstrap';
+import { Container, Form, Col, Row, Button, Alert } from 'react-bootstrap';
 
 import useLocalStorage from "react-localstorage-hook";
 
@@ -13,6 +13,7 @@ function App() {
   const disRef = useRef();
 
   const [dataItems, setDataItems] = useLocalStorage("dataItems", []);
+  const [error, setError] = useState("");
 
   // const dataItems = []; // only temporary
 
@@ -29,10 +30,9 @@ function App() {
 
 
   
-
   const addItem = () => {
     if (itemRef.current.value === "") {
-      alert("Item name is empty");
+      setError("Please choose an item first.");
       return;
     }
     if (qtyRef.current.value === "") {
@@ -44,42 +44,50 @@ function App() {
     const pid = itemRef.current.value;
     const product = dummyProductList.find(e => e.id === pid);
 
-    console.log(product.name, ppuRef.current.value);
+    if (!product) {
+      setError("Selected item could not be found.");
+      return;
+    }
+
+    const quantity = Math.max(parseInt(qtyRef.current.value, 10) || 1, 1);
+    const discount = Math.max(parseInt(disRef.current.value, 10) || 0, 0);
+    const price = Math.max(parseFloat(ppuRef.current.value) || product.price, 0);
 
     var found = false;
-    dataItems.forEach(items => {
-      if (items.item == product.name && items.ppu == ppuRef.current.value) {
-        items.qty = parseInt(items.qty) + parseInt(qtyRef.current.value);
-        items.dis = parseInt(items.dis) + parseInt(disRef.current.value);
+    const nextItems = dataItems.map(items => {
+      if (items.item === product.name && Number(items.ppu) === price) {
         found = true;
+        return {
+          ...items,
+          qty: Number(items.qty) + quantity,
+          dis: Number(items.dis) + discount
+        };
       }
-    })
+      return items;
+    });
     if (!found) {
       var itemObj = {
         item: product.name,
-        ppu: ppuRef.current.value,
-        dis: disRef.current.value,
-        qty: qtyRef.current.value
+        ppu: price,
+        dis: discount,
+        qty: quantity
       };
-      dataItems.push(itemObj);
+      nextItems.push(itemObj);
     }
-    setDataItems([...dataItems]);
+    setDataItems(nextItems);
+    setError("");
   }
 
 
   const productChange = (e) => {
     const pid = itemRef.current.value;
     const product = dummyProductList.find((e) => e.id === pid);
-    ppuRef.current.value = product.price
+    ppuRef.current.value = product ? product.price : "";
   };
 
   const options = dummyProductList.map((v) => {
-    return <option value={v.id}>{v.name}</option>
+    return <option key={v.id} value={v.id}>{v.name}</option>
   })
-
-  const clearDataItems = () => {
-    setDataItems([]);
-  }
 
 
 
@@ -90,6 +98,7 @@ function App() {
         <Row>
           <Col xs={4} style={{ marginTop: '20vh' }}>
             <Form>
+              {error && <Alert variant="warning">{error}</Alert>}
               <Form.Group className="mb-3" controlId="formItem">
                 <Form.Label>Item</Form.Label>
                 <Form.Select aria-label="Default select example" ref={itemRef} onChange={productChange}>
@@ -99,7 +108,7 @@ function App() {
 
               <Form.Group className="mb-3" controlId="formPrice">
                 <Form.Label>Price</Form.Label>
-                <Form.Control type="number" placeholder="Price Per Unit" ref={ppuRef} />
+                <Form.Control type="number" placeholder="Price Per Unit" ref={ppuRef} defaultValue={dummyProductList[0].price} />
               </Form.Group>
 
               <Form.Group className="mb-3" controlId="formQauntity">

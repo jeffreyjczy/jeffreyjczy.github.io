@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import './App.css';
-import { Container, Form, Col, Row, Button, Modal, Table } from 'react-bootstrap';
+import { Container, Form, Col, Row, Button, Modal } from 'react-bootstrap';
 import { Typeahead } from 'react-bootstrap-typeahead';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { FaTrash } from 'react-icons/fa';
@@ -32,32 +32,40 @@ function App() {
   const dummyGrade = ['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D', 'F']
   const dummyCred = [4, 3.75, 3.25, 3, 2.75, 2.25, 2, 1.75, 1, 0]
 
-  const options1 = dummySemYear.map((v, k) => {
-    return <option>{v}</option>
+  const options1 = dummySemYear.map((v) => {
+    return <option key={v}>{v}</option>
   })
-  const options2 = dummySem.map((v, k) => {
-    return <option>{v}</option>
+  const options2 = dummySem.map((v) => {
+    return <option key={v}>{v}</option>
   })
-  const options4 = dummyGrade.map((v, k) => {
-    return <option>{v}</option>
+  const options4 = dummyGrade.map((v) => {
+    return <option key={v}>{v}</option>
   })
 
   const addSubject = () => {
-    
-    const subjectCode = subRef.current.state.selected[0].code;
-    const subjectName = subRef.current.state.selected[0].name;
+    const selectedSubject = subRef.current.state.selected[0];
+
+    if (!selectedSubject) {
+      return;
+    }
+
+    const subjectCode = selectedSubject.code;
+    const subjectName = selectedSubject.name;
     setSingleSelections([]);
 
     var found = false;
-    dataCourses.forEach(course => {
-      if (course.code == subjectCode) {
+    const nextCourses = dataCourses.map(course => {
+      if (course.code === subjectCode) {
         handleShow1();
-        course.grade = gradeRef.current.value;
-        course.year = yearRef.current.value;
-        course.sem = semRef.current.value;
         found = true;
-        return;
+        return {
+          ...course,
+          grade: gradeRef.current.value,
+          year: yearRef.current.value,
+          sem: semRef.current.value
+        };
       }
+      return course;
     })
     if (!found) {
       var itemObj = {
@@ -67,9 +75,9 @@ function App() {
         sem: semRef.current.value,
         grade: gradeRef.current.value
       };
-      dataCourses.push(itemObj);
+      nextCourses.push(itemObj);
     }
-    setDataCourses([...dataCourses]);
+    setDataCourses(nextCourses);
     handleClose();
   }
 
@@ -79,8 +87,7 @@ function App() {
     perSem = [];
   }
   const deleteClick = (i) => {
-    dataCourses.splice(i, 1);
-    setDataCourses([...dataCourses]);
+    setDataCourses(dataCourses.filter((course, index) => index !== i));
   }
 
   let gpaPerSem = [];
@@ -88,12 +95,12 @@ function App() {
 
   function RenderGPA({ data, setDataCourses }) {
 
-    data.sort((a, b) => {
+    const sortedData = useMemo(() => data.map((course, index) => ({ ...course, originalIndex: index })).sort((a, b) => {
       if (a.year === b.year) {
         return a.sem - b.sem;
       }
       return a.year > b.year ? 1 : -1;
-    });
+    }), [data]);
 
     const [dataRows, setDataRows] = useState();
     const [totalGPA, setTotalGPA] = useState(0);
@@ -103,23 +110,23 @@ function App() {
       let gpaPerSem1 = [];
       let perSem1 = [];
 
-      if (data.length == 0) {
+      if (sortedData.length === 0) {
         const w = <h2 style={{ textAlign: 'center' }}>Record is empty, please add subject.</h2>
         return setDataRows(w);
       }
       else {
-        let nowYear = data[0].year;
-        let nowSem = data[0].sem;
+        let nowYear = sortedData[0].year;
+        let nowSem = sortedData[0].sem;
 
         let semGrade = 0;
         let count1 = 0;
-        const z = data.map((w, k) => {
+        sortedData.forEach((w, k) => {
           if (nowYear === w.year && nowSem === w.sem) {
             semGrade += dummyCred[dummyGrade.indexOf(w.grade)];
             count1 += 1;
           }
 
-          else if (nowYear != w.year || nowSem != w.sem) {
+          else if (nowYear !== w.year || nowSem !== w.sem) {
             nowYear = w.year;
             nowSem = w.sem;
             gpaPerSem1.push((semGrade / count1).toFixed(2));
@@ -127,13 +134,13 @@ function App() {
             count1 = 1;
           }
 
-          if (k === data.length - 1) {
+          if (k === sortedData.length - 1) {
             gpaPerSem1.push((semGrade / count1).toFixed(2));
           }
 
         })
         let sumGrade = 0;
-        const x = gpaPerSem1.map((l) => {
+        gpaPerSem1.forEach((l) => {
           sumGrade += parseFloat(l);
         })
 
@@ -142,11 +149,11 @@ function App() {
         let currentYear = 0;
         let currentSem = 0;
         let count = -1;
-        const y = data.map((v, i) => {
+        const y = sortedData.map((v) => {
           if (currentYear === v.year && currentSem === v.sem) {
             return (
-              <Row>
-                <Col xs='1' style={{ textAlign: 'center' }}><FaTrash onClick={() => deleteClick(i)} /></Col>
+              <Row key={`${v.code}-${v.year}-${v.sem}`}>
+                <Col xs='1' style={{ textAlign: 'center' }}><FaTrash onClick={() => deleteClick(v.originalIndex)} /></Col>
                 <Col xs = '2'>
                   {v.code}
                 </Col>
@@ -168,7 +175,7 @@ function App() {
             let obj = v.sem + '/' + v.year
             perSem1.push(obj);
             return (
-              <div>
+              <div key={`${v.code}-${v.year}-${v.sem}`}>
                 <br />
                 <Row style={{ textAlign: 'center' }}>
 
@@ -184,7 +191,7 @@ function App() {
                 </Row>
 
                 <Row>
-                  <Col xs='1' style={{ textAlign: 'center' }}><FaTrash onClick={() => deleteClick(i)} /></Col>
+                  <Col xs='1' style={{ textAlign: 'center' }}><FaTrash onClick={() => deleteClick(v.originalIndex)} /></Col>
                   <Col xs='2'>
                     {v.code}
                   </Col>
@@ -206,7 +213,7 @@ function App() {
         perSem = [...perSem1];
         
       }
-    }, [data]);
+    }, [sortedData]);
 
 
     return (
@@ -304,7 +311,7 @@ function App() {
       </Modal>
 
       {/* Modal Updater */}
-      <Modal className="my-modal" show={show1} onHide={handleClose1} aria-labelledby="example-modal-sizes-title-lg" centeredtr>
+      <Modal className="my-modal" show={show1} onHide={handleClose1} aria-labelledby="example-modal-sizes-title-lg" centered>
         <Modal.Header closeButton>
           <Modal.Title id="example-modal-sizes-title-lg">Course Already Exists</Modal.Title>
         </Modal.Header>

@@ -14,7 +14,7 @@ body {
 }
 
 .home {
-    display: absolute;
+    display: block;
     padding:0;
     margin:0;
     height:100vh;
@@ -22,7 +22,7 @@ body {
 }
 
 h2 {
-    display: absolute;
+    display: block;
     text-align: center;
     font-size: 50px;
     margin-top: 20vh;
@@ -49,7 +49,6 @@ h2 {
 
 .character > a {
     background-color: #eaeaeaf3;
-    min-width:450px;
     border-radius: 3px;
     padding: 10px 20px;
     display: grid;
@@ -61,7 +60,7 @@ h2 {
     text-decoration: none;
 }
 
-.character > a > name {
+.character > a > .character-name {
     font-size: 20px;
     grid-area: name;
     margin-bottom: 0px;
@@ -230,7 +229,7 @@ span {
 #comment {
     display: block;
     min-height: 150px;
-    min-width: 750px;
+    width: min(750px, calc(100% - 32px));
     margin: auto;
     margin-top: -20px;
 }
@@ -261,5 +260,50 @@ body > button{
     max-width: 900px;
     margin:auto;
     margin-bottom: 100px;
+}
+
+@media (max-width: 760px) {
+    body {
+        font-size: 18px;
+    }
+
+    h1,
+    h2 {
+        font-size: 34px;
+        margin-top: 6vh;
+    }
+
+    #charactersList {
+        grid-template-columns: 1fr;
+    }
+
+    .information,
+    .question,
+    .profile,
+    .picture {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        align-items: stretch;
+    }
+
+    #faculty,
+    #searchBar {
+        width: 100%;
+        margin-left: 0;
+    }
+
+    #name-label {
+        margin-left: 0;
+    }
+
+    form {
+        width: calc(100% - 24px);
+    }
+
+    .picture img {
+        width: 100% !important;
+        height: auto !important;
+    }
 }
 

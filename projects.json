@@ -1,0 +1,27 @@
+[
+  {
+    "slug": "react-quotation",
+    "title": "Quotation Builder",
+    "summary": "A React quotation table that tracks products, quantity, discounts, and totals.",
+    "category": "React",
+    "path": "react-quotation/",
+    "sourceUrl": "https://github.com/jeffreyjczy/jeffreyjczy.github.io/tree/master/react-quotation-sourceCode",
+    "tags": ["React", "Bootstrap", "Local Storage"]
+  },
+  {
+    "slug": "instructor-assessment",
+    "title": "Instructor Assessment",
+    "summary": "A vanilla JavaScript instructor directory with faculty filtering, search, and profile pages.",
+    "category": "JavaScript",
+    "path": "instructor-assessment/",
+    "tags": ["HTML", "CSS", "JavaScript"]
+  },
+  {
+    "slug": "wad",
+    "title": "WAD Class Portfolio",
+    "summary": "Early web application development coursework with themed pages and simple HTML/CSS layouts.",
+    "category": "Coursework",
+    "path": "wad/",
+    "tags": ["HTML", "CSS", "Theme Toggle"]
+  }
+]

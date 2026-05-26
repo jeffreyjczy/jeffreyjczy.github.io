@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Table, Button } from "react-bootstrap";
 
 import { FaTrash } from 'react-icons/fa';
@@ -14,18 +14,22 @@ function QuotationTable({ data, setDataItems }) {
     const [totalDiscount, setTotalDiscount] = useState(0);
 
 
+    const deleteClick = useCallback((i) => {
+        setDataItems(data.filter((item, index) => index !== i));
+    }, [data, setDataItems]);
+
     useEffect(() => {
         let sum = 0;
         let sumDis = 0;
         const z = data.map((v, i) => {
-            let amount = (v.qty * v.ppu);
+            let amount = (Number(v.qty) * Number(v.ppu));
             if (amount > v.dis) {
-                amount -= v.dis
+                amount -= Number(v.dis)
             }
             else {
                 amount = 0
             };
-            sumDis += parseInt(v.dis);
+            sumDis += Number(v.dis);
             sum += amount;
             return (
                 <tr key={i} style = {{ color:'white' }}>
@@ -42,7 +46,7 @@ function QuotationTable({ data, setDataItems }) {
         setDataRows(z);
         setTotalPrice(sum);
         setTotalDiscount(sumDis);
-    }, [data]); //empty list of dependency, in this case useEffect will run only one time.
+    }, [data, deleteClick]);
 
     const numberWithCommas = (x) => {
         return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -52,14 +56,6 @@ function QuotationTable({ data, setDataItems }) {
         setDataItems([]);
         setDataRows([]);  //list of HTML rows
     };
-
-    const deleteClick = (i) => {
-        data.splice(i,1);
-        setDataItems([...data]);
-    }
-
-
-
 
     return (
         <div>
